@@ -11,14 +11,17 @@ namespace Lesson_1
         public class Player
         {
             public bool isalive;
-            public Vector2 Position;
-
-            
+            public Vector2 Position;            
 
             public Player(Vector2 position)
             {
                 isalive = true;
                 Position = position;
+            }
+
+            public static bool EqualsPlayerPosition(Player player_1 , Player player_2)
+            {
+                return player_1.Position.Equals(player_2.Position);
             }
         }
        public class Vector2
@@ -65,40 +68,40 @@ namespace Lesson_1
 
                 while (true)
                 {
-                    if (player1.Equals(player2))
+                    if (Player.EqualsPlayerPosition(player1, player2))
                     {
                         player1.isalive = false;
                         player2.isalive = false;
                     }
 
-                    if (player1.Equals(player3))
+                    if (Player.EqualsPlayerPosition(player1, player3))
                     {
                         player1.isalive = false;
                         player3.isalive = false;
                     }
 
-                    if (player2.Equals(player3))
+                    if (Player.EqualsPlayerPosition(player2, player3))
                     {
                         player2.isalive = false;
                         player3.isalive = false;
                     }
-                    player1
-                    player2
-                    player3.
+                    player1.Position.AddRandomOffset();
+                    player2.Position.AddRandomOffset();
+                    player3.Position.AddRandomOffset();
 
-                    if (isalive1)
+                    if (player1.isalive)
                     {
                         Console.SetCursorPosition(obj1x, obj1y);
                         Console.Write("1");
                     }
 
-                    if (isalive2)
+                    if (player2.isalive)
                     {
                         Console.SetCursorPosition(obj2x, obj2y);
                         Console.Write("2");
                     }
 
-                    if (isalive3)
+                    if (player3.isalive)
                     {
                         Console.SetCursorPosition(obj3x, obj3y);
                         Console.Write("3");
