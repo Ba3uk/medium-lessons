@@ -10,51 +10,145 @@ namespace Lesson_1
     {
         public class Player
         {
-            public bool isalive;
-            public Vector2 Position;            
+            public static bool EqualsPlayerPosition(Player player_1, Player player_2)
+            {
+                return player_1.Position.X == player_2.Position.X && player_1.Position.Y == player_2.Position.Y;
+            }
+
+            private static Random _random = new Random();
+            private static int _lastId = 0;
+
+            public int ID { private set; get; }
+            public bool IsAlive { private set; get; }
+            public Vector2 Position { private set; get; }
 
             public Player(Vector2 position)
             {
-                isalive = true;
+                ID = _lastId++;
+                IsAlive = true;
                 Position = position;
             }
 
-            public static bool EqualsPlayerPosition(Player player_1 , Player player_2)
+            public void KillPlayer()
             {
-                return player_1.Position.Equals(player_2.Position);
+                IsAlive = false;
             }
+
+            public void AddRandomVectorOffset()
+            {
+                Position.X += _random.Next(-1, 1);
+                Position.Y += _random.Next(-1, 1);
+            } 
         }
        public class Vector2
        {
             private int _x;
+            public int X
+            {
+                set
+                {
+                    _x = value;
+
+                    if (_x < 0)
+                        _x = 0;
+                }
+                get { return _x; ; }
+            }
+
             private int _y;
+            public int Y
+            {
+                set
+                {
+                    _y = value;
+
+                    if (_y < 0)
+                        _y = 0;
+                }
+                get { return _y; ; }
+            }
 
             public Vector2(int x , int y)
             {
-                _x = x;
-                _y = y;               
+                X = x;
+                Y = y;               
+            }   
+        }
+
+        public class GameLobby
+        {
+            private List<Player> _allPayers;
+            private List<Player> _alivePlayers;
+
+            private bool isEndGame
+            {
+                get => _allPayers.Count == 1;
             }
 
-            Random random = new Random();
-
-
-            public bool Equals(Vector2 vector)
+            public GameLobby(List<Player> players)
             {
-                return vector._x == this._x && vector._y == this._y;
+                _allPayers = players;
             }
 
-            public void AddRandomOffset()
+            public void PlayGame()
             {
-                _x += random.Next(-1, 1);
-                _y += random.Next(-1, 1);
+                while (!isEndGame)
+                {
+                    PlaySession();
+                    PurposeOfProgress();
+                    PrintAlivePlayer();
+                }
+                Console.ReadKey();
+            }
 
-                if (_x < 0)
-                    _x = 0;
-                
-                if (_y < 0)
-                    _y = 0;
+            private void PlaySession()
+            {
+                _alivePlayers = _allPayers;
+                for (int i = 0; i < _allPayers.Count; i++)
+                {
+                    for (int j = i + 1; j < _allPayers.Count; j++)
+                    {
+                        if (Player.EqualsPlayerPosition(_allPayers[i], _allPayers[j]))
+                        {
+                            _allPayers[i].KillPlayer();
+                            _allPayers[j].KillPlayer();
+                            
+                            _alivePlayers.RemoveAll(player =>
+                            {
+                                return player.ID == _allPayers[i].ID || player.ID == _allPayers[j].ID;
+                            });
+                        }
+                    }
+                }
+                _allPayers = _alivePlayers;
+            }
+
+            private void PurposeOfProgress()
+            {
+                foreach(var player in _alivePlayers)
+                {
+                    player.AddRandomVectorOffset();
+                }
+            }
+
+            private void PrintAlivePlayer()
+            {
+                foreach (var player in _alivePlayers)
+                {
+                    ConsoleWriter.PrintPlayerProgress(player);
+                }
             }
         }
+
+        public static class ConsoleWriter
+        {
+            public static void PrintPlayerProgress(Player player)
+            {
+                Console.SetCursorPosition(player.Position.X, player.Position.Y);
+                Console.Write($"{player.ID}");
+            }
+        }
+
         class Program
         {
             public static void Main(string[] args)
@@ -63,50 +157,9 @@ namespace Lesson_1
                 Player player2 = new Player(new Vector2(10, 10));
                 Player player3 = new Player(new Vector2(15, 15));
 
+                var lobby = new GameLobby(new List<Player> { player1, player2, player3 });
 
-                Random random = new Random();
-
-                while (true)
-                {
-                    if (Player.EqualsPlayerPosition(player1, player2))
-                    {
-                        player1.isalive = false;
-                        player2.isalive = false;
-                    }
-
-                    if (Player.EqualsPlayerPosition(player1, player3))
-                    {
-                        player1.isalive = false;
-                        player3.isalive = false;
-                    }
-
-                    if (Player.EqualsPlayerPosition(player2, player3))
-                    {
-                        player2.isalive = false;
-                        player3.isalive = false;
-                    }
-                    player1.Position.AddRandomOffset();
-                    player2.Position.AddRandomOffset();
-                    player3.Position.AddRandomOffset();
-
-                    if (player1.isalive)
-                    {
-                        Console.SetCursorPosition(obj1x, obj1y);
-                        Console.Write("1");
-                    }
-
-                    if (player2.isalive)
-                    {
-                        Console.SetCursorPosition(obj2x, obj2y);
-                        Console.Write("2");
-                    }
-
-                    if (player3.isalive)
-                    {
-                        Console.SetCursorPosition(obj3x, obj3y);
-                        Console.Write("3");
-                    }
-                }
+                lobby.PlayGame();
             }
         }
     }
