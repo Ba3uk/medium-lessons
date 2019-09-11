@@ -15,7 +15,7 @@ namespace Lesson_1_4
 
     class Motor
     {
-        public float MovementSpeed { get; private set; }
+        public float Speed { get; private set; }
         public Vector2 MovementDirection { get; private set; }
     }
 
@@ -23,7 +23,7 @@ namespace Lesson_1_4
     {
         public string Name { get; private set; }
 
-        public int WeaponDamage { get; private set; }
+        public int Damage { get; private set; }
         public float WeaponCooldown { get; private set; }
 
         public bool IsReloading()
