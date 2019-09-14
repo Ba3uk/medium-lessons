@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lesson_2_2
 {
@@ -95,62 +92,84 @@ namespace Lesson_2_2
         }
     }
 
-    public class ReplenishCommand : IConsoleCommand
+    public class ReplenishCommand : ConsoleCommand
     {
-        public string Description { get; set; }
-        public int Id { get; set; }
         private int _contribution;
         private User _user;
 
-        public ReplenishCommand(User user, int contribution)
+        public ReplenishCommand(Bank bank)
         {
-            _user = user;
-            _contribution = contribution;
+            Bank = bank;
         }
 
-        public void DirectAction()
+        public override void SettingData()
+        {
+            Console.WriteLine("Введите ID пользователя:");
+            var userId = int.Parse(Console.ReadLine());
+
+            Console.WriteLine("Введите сумму начислений");
+            var contribution = int.Parse(Console.ReadLine());
+        }
+
+        public override void DirectAction()
         {
             _user.Account.ReplenishAccount(_contribution);
         }
 
-        public void OppositeAction()
+        public override void OppositeAction()
         {
             _user.Account.DebitTheAccount(_contribution);
         }
     }
-    public class DebitCommand:IConsoleCommand
+
+    public class DebitCommand : ConsoleCommand
     {
-        public string Description { get; set; }
-        public int Id { get; set; }
         private int _amount;
         private User _user;
+        private Bank _bank;
 
-        
-
-        public void DirectAction()
+        public DebitCommand(int id, string description, Bank bank)
         {
-            _user.Account.DebitTheAccount(_amount);            
+            Id = id;
+            Description = description;
+            _bank = bank;
         }
 
-        public void OppositeAction()
+        public override void SettingData()
+        {
+            Console.WriteLine("Укажите ID юзера:");
+            string consoleInput = "";
+            int id;
+            while (int.TryParse(consoleInput, out id))
+            {
+                Console.WriteLine("Укажите ID юзера:");
+                consoleInput = Console.ReadLine();
+            }
+        }
+
+        public override void DirectAction()
+        {
+            _user.Account.DebitTheAccount(_amount);
+        }
+
+        public override void OppositeAction()
         {
             _user.Account.ReplenishAccount(_amount);
         }
     }
-    public class CreateUser : IConsoleCommand
+
+    public class CreateUser : ConsoleCommand
     {
-        public string Description { get; set; }
-        public int Id { get; set; }
-
         private User _user;
-        private Bank _bank;
 
-        public CreateUser(Bank bank)
+        public CreateUser(int id, string description, Bank bank)
         {
-            _bank = bank;
+            Id = id;
+            Description = description;
+            Bank = bank;
         }
 
-        public void SettingData()
+        public override void SettingData()
         {
             Console.WriteLine("Введите Имя:");
             var firstName = Console.ReadLine();
@@ -161,60 +180,83 @@ namespace Lesson_2_2
             _user = new User(firstName, lastName);
         }
 
-        public void DirectAction()
+        public override void DirectAction()
         {
             _bank.CreateNewUser(_user);
         }
 
-        public void OppositeAction()
+        public override void OppositeAction()
         {
             _bank.DeleteClient(_user);
         }
     }
 
-    public class DeleteUser : IConsoleCommand
+    public class DeleteUser : ConsoleCommand
     {
-        public string Description { get; set; }
-        public int Id { get; set; }
-
         private User _user;
-        private Bank _bank;
 
-        public DeleteUser(Bank bank)
+        public DeleteUser(int id, string description, Bank bank)
         {
-            _bank = bank;
+            Id = id;
+            Description = description;
+            Bank = bank;
         }
 
-        public void SettingData()
+        public override void SettingData()
         {
             Console.WriteLine("Укажите ID юзера:");
             string consoleInput = "";
             int id;
-            while (int.TryParse(consoleInput , out id))
+            while (int.TryParse(consoleInput, out id))
             {
                 Console.WriteLine("Укажите ID юзера:");
                 consoleInput = Console.ReadLine();
-            }        
+            }
         }
 
-        public void DirectAction()
+        public override void DirectAction()
         {
             _bank.CreateNewUser(_user);
         }
 
-        public void OppositeAction()
+        public override void OppositeAction()
         {
             _bank.DeleteClient(_user);
         }
     }
 
-
     interface IConsoleCommand
     {
-        string Description { get; set; }
-        int Id { get; set; }
         void SettingData();
         void DirectAction();
         void OppositeAction();
+    }
+
+    public abstract class ConsoleCommand : IConsoleCommand
+    {
+        protected Bank Bank;
+        public string Description { get; protected set; }
+        public int Id { get; protected set; }
+
+        public override string ToString()
+        {
+            return $"{Id}. {Description}";
+        }
+
+        public abstract void DirectAction();
+
+        public abstract void OppositeAction();
+
+        public abstract void SettingData();
+    }
+
+    public class UIConsoleCommand<T> where T : ConsoleCommand, new()
+    {
+        private static int _lastID { get; set; }
+        public int ID { get; private set; }
+
+        public UIConsoleCommand<T>
+
+        public ConsoleCommand createComand() { return new T(); }
     }
 }
