@@ -69,6 +69,8 @@ namespace Lesson_2_2
             _users = new List<User>();
         }
 
+        public User GetUserById(int id) => _users.Find(user => user.Id == id);
+
         public void CreateNewUser(User user)
         {
             _users.Add(user);
@@ -92,23 +94,92 @@ namespace Lesson_2_2
         }
     }
 
+    public class BankConsoleSystem
+    {
+        private List<ConsoleCommand> _executedCommands= new List<ConsoleCommand>();
+
+        public BankConsoleSystem(Bank bank)
+        {
+
+        }
+
+        private void PrintAllCommands()
+        {
+            Console.WriteLine("1.Создать пользователя");
+            Console.WriteLine("2.Удалить пользователя");
+            Console.WriteLine("3.Пополнить счет");
+
+            if (_executedCommands.Count > 0)
+                Console.WriteLine("4.Возврат последней операции");
+        }
+        private void ReadKey()
+        {
+           int userInput = ConsoleHelper.GetValidIntValue("Введите номер команды");
+            switch (userInput)
+            {
+                case 1:
+
+                    break;
+
+
+                case 2:
+
+                    break;
+
+                case 3:
+
+                    break;
+
+
+
+            }
+        }
+    }
+
+    public static class ConsoleHelper
+    {
+        public static int GetValidIntValue(string header)
+        {
+            int resultValue;
+            string consoleInput;
+            while (true)
+            {
+                Console.WriteLine($"{header}: ");
+                consoleInput = Console.ReadLine();
+                if (int.TryParse(consoleInput, out resultValue))
+                {
+                    return resultValue;
+                }
+                else
+                {
+                    Console.WriteLine($"Ошибка, ожидается целочисленное значение. Попробуйте еще раз.");
+                }
+            }
+           
+        }
+
+        public static string GetValidStringValue(string header)
+        {
+            Console.WriteLine($"{header}: ");
+            string consoleInput = Console.ReadLine();
+
+            return consoleInput;
+        }
+    }
+
     public class ReplenishCommand : ConsoleCommand
     {
         private int _contribution;
         private User _user;
 
-        public ReplenishCommand(Bank bank)
-        {
-            Bank = bank;
-        }
+        public ReplenishCommand(Bank bank) : base(bank) { }
 
-        public override void SettingData()
+        public override bool SettingData()
         {
-            Console.WriteLine("Введите ID пользователя:");
-            var userId = int.Parse(Console.ReadLine());
-
-            Console.WriteLine("Введите сумму начислений");
-            var contribution = int.Parse(Console.ReadLine());
+            var userId = ConsoleHelper.GetValidIntValue("Введите ID пользователя:");
+            _contribution = ConsoleHelper.GetValidIntValue("Введите сумму начислений");
+            _user = Bank.GetUserById(userId);
+            return _user != null;                
         }
 
         public override void DirectAction()
@@ -128,23 +199,13 @@ namespace Lesson_2_2
         private User _user;
         private Bank _bank;
 
-        public DebitCommand(int id, string description, Bank bank)
-        {
-            Id = id;
-            Description = description;
-            _bank = bank;
-        }
+        public DebitCommand(Bank bank) : base(bank) { }
 
-        public override void SettingData()
+        public override bool SettingData()
         {
-            Console.WriteLine("Укажите ID юзера:");
-            string consoleInput = "";
-            int id;
-            while (int.TryParse(consoleInput, out id))
-            {
-                Console.WriteLine("Укажите ID юзера:");
-                consoleInput = Console.ReadLine();
-            }
+            var userId = ConsoleHelper.GetValidIntValue("Введите ID пользователя:");
+            _user = Bank.GetUserById(userId);
+            return _user != null;
         }
 
         public override void DirectAction()
@@ -158,76 +219,59 @@ namespace Lesson_2_2
         }
     }
 
-    public class CreateUser : ConsoleCommand
+    public class CreateUserCommand : ConsoleCommand
     {
         private User _user;
 
-        public CreateUser(int id, string description, Bank bank)
+        public CreateUserCommand(Bank bank) : base(bank) { }
+
+        public override bool SettingData()
         {
-            Id = id;
-            Description = description;
-            Bank = bank;
-        }
-
-        public override void SettingData()
-        {
-            Console.WriteLine("Введите Имя:");
-            var firstName = Console.ReadLine();
-
-            Console.WriteLine("Введите Фамилию:");
-            var lastName = Console.ReadLine();
-
+            var firstName = ConsoleHelper.GetValidStringValue("Введите имя: ");
+            var lastName = ConsoleHelper.GetValidStringValue("Введите Фамилию: ");
             _user = new User(firstName, lastName);
+            return _user != null;
+
         }
 
         public override void DirectAction()
         {
-            _bank.CreateNewUser(_user);
+            Bank.CreateNewUser(_user);
         }
 
         public override void OppositeAction()
         {
-            _bank.DeleteClient(_user);
+            Bank.DeleteClient(_user);
         }
     }
 
-    public class DeleteUser : ConsoleCommand
+    public class DeleteUserCommand : ConsoleCommand
     {
         private User _user;
 
-        public DeleteUser(int id, string description, Bank bank)
-        {
-            Id = id;
-            Description = description;
-            Bank = bank;
-        }
+        public DeleteUserCommand(Bank bank) : base(bank) { }
 
-        public override void SettingData()
+        public override bool SettingData()
         {
-            Console.WriteLine("Укажите ID юзера:");
-            string consoleInput = "";
-            int id;
-            while (int.TryParse(consoleInput, out id))
-            {
-                Console.WriteLine("Укажите ID юзера:");
-                consoleInput = Console.ReadLine();
-            }
+            var userId = ConsoleHelper.GetValidIntValue("Введите ID пользователя:");
+            _user = Bank.GetUserById(userId);
+            return _user != null;
         }
 
         public override void DirectAction()
         {
-            _bank.CreateNewUser(_user);
+            Bank.CreateNewUser(_user);
         }
 
         public override void OppositeAction()
         {
-            _bank.DeleteClient(_user);
+            Bank.DeleteClient(_user);
         }
     }
 
     interface IConsoleCommand
     {
-        void SettingData();
+        bool SettingData();
         void DirectAction();
         void OppositeAction();
     }
@@ -235,28 +279,35 @@ namespace Lesson_2_2
     public abstract class ConsoleCommand : IConsoleCommand
     {
         protected Bank Bank;
-        public string Description { get; protected set; }
-        public int Id { get; protected set; }
+        public int Id { get; private set; }
 
-        public override string ToString()
+        public ConsoleCommand(Bank bank)
         {
-            return $"{Id}. {Description}";
+            Bank = bank;
         }
 
         public abstract void DirectAction();
 
         public abstract void OppositeAction();
 
-        public abstract void SettingData();
+        public abstract bool SettingData();
     }
 
-    public class UIConsoleCommand<T> where T : ConsoleCommand, new()
+
+
+    public class programm
     {
-        private static int _lastID { get; set; }
-        public int ID { get; private set; }
+        public static void Main(string[] args)
+        {
+            Bank bank = new Bank();
 
-        public UIConsoleCommand<T>
+            BankConsoleSystem consoleSystem = new BankConsoleSystem(bank);
+            consoleSystem.PrintAllCommands();
+            Console.ReadKey();
+        }
 
-        public ConsoleCommand createComand() { return new T(); }
+
     }
 }
+
+
