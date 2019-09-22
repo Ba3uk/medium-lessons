@@ -96,43 +96,151 @@ namespace Lesson_2_2
 
     public class BankConsoleSystem
     {
-        private List<ConsoleCommand> _executedCommands= new List<ConsoleCommand>();
+        private ConsleStack _executedCommands = new ConsleStack(2);
+        private bool _isUndo;
+        private Bank _bank;
 
         public BankConsoleSystem(Bank bank)
         {
-
+            _bank = bank;
         }
 
         private void PrintAllCommands()
         {
+            ConsoleHelper.ClearConsole();
+
+
             Console.WriteLine("1.Создать пользователя");
             Console.WriteLine("2.Удалить пользователя");
             Console.WriteLine("3.Пополнить счет");
 
-            if (_executedCommands.Count > 0)
+            if (_executedCommands.StackIsContainsCommands)
                 Console.WriteLine("4.Возврат последней операции");
         }
-        private void ReadKey()
+               
+        private int ReadNumConsoleComand()
         {
-           int userInput = ConsoleHelper.GetValidIntValue("Введите номер команды");
-            switch (userInput)
+            return ConsoleHelper.GetValidIntValue("Введите номер команды");
+        }
+
+        private ConsoleCommand GetConsoleCommandById(int id)
+        {
+            _isUndo = false;
+            ConsoleCommand newConsoleCommand;
+            switch (id)
             {
                 case 1:
-
+                    newConsoleCommand = new CreateUserCommand(_bank);
                     break;
 
 
                 case 2:
-
+                    newConsoleCommand = new DeleteUserCommand(_bank);
                     break;
 
                 case 3:
-
+                    newConsoleCommand = new DebitCommand(_bank);
                     break;
 
+                case 4:
+                    newConsoleCommand = _executedCommands.GetLastCommand();
+                    _isUndo = true;
+                    break;
 
-
+                default:
+                    newConsoleCommand = null;
+                    break;
             }
+            return newConsoleCommand;
+        }
+
+        public void LaunchWork()
+        {
+            while (true)
+            {
+                PrintAllCommands();
+
+                ConsoleCommand consoleCommandSelected;
+                do
+                {
+                    int commandId = ReadNumConsoleComand();
+                    consoleCommandSelected = GetConsoleCommandById(commandId);
+
+                } while (consoleCommandSelected == null);
+
+                if (_isUndo)
+                {
+                    consoleCommandSelected.OppositeAction();
+                    _executedCommands.RemoveLastCommand();
+
+                }
+                else
+                {
+                    if (consoleCommandSelected.SettingData())
+                    {
+                        consoleCommandSelected.DirectAction();
+                        _executedCommands.AddCommantds(consoleCommandSelected);
+                    }
+                    else
+                    {
+                        consoleCommandSelected = null;
+                        ConsoleHelper.ClearConsole();
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    public class ConsleStack
+    {
+        private List<ConsoleCommand> _stack;
+        private int _maxSizeStack;
+
+        public ConsleStack(int maxSizeStack)
+        {
+            _maxSizeStack = maxSizeStack;
+            _stack = new List<ConsoleCommand>();
+        }
+
+        public void AddCommantds(ConsoleCommand consoleCommand)
+        {
+            if (StackIsFull)
+            {
+                RemoveFirsCommand();
+            }
+
+            _stack.Add(consoleCommand);           
+        }
+
+        public ConsoleCommand GetLastCommand()
+        {
+            if (StackIsContainsCommands)
+                return _stack[0];
+            else
+                throw new NullReferenceException();
+        }
+
+        public void RemoveLastCommand()
+        {
+            if (StackIsContainsCommands)
+                _stack.Remove(_stack[_stack.Count - 1]);
+        }
+
+        public void RemoveFirsCommand()
+        {
+            if(StackIsContainsCommands)
+                _stack.Remove(_stack[0]);
+        }
+
+        public bool StackIsFull
+        {
+            get => _stack.Count == _maxSizeStack;
+        }
+
+        public bool StackIsContainsCommands
+        {
+            get => _stack.Count > 0;
         }
     }
 
@@ -164,6 +272,11 @@ namespace Lesson_2_2
             string consoleInput = Console.ReadLine();
 
             return consoleInput;
+        }
+
+        public static void ClearConsole()
+        {
+            Console.Clear();
         }
     }
 
@@ -293,20 +406,15 @@ namespace Lesson_2_2
         public abstract bool SettingData();
     }
 
-
-
-    public class programm
+    public class ProgrammTest
     {
         public static void Main(string[] args)
         {
             Bank bank = new Bank();
 
             BankConsoleSystem consoleSystem = new BankConsoleSystem(bank);
-            consoleSystem.PrintAllCommands();
-            Console.ReadKey();
+            consoleSystem.LaunchWork();
         }
-
-
     }
 }
 
