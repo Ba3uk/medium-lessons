@@ -4,10 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lesson_1
+namespace Lesson_2_4
 {
-    class Program
+    public interface ReceivingInformation
     {
-
+        string GetInformation();
     }
+
+    public interface StreamProcessing
+    {
+        string GetStrea
+    }
+
 }
