@@ -18,12 +18,15 @@ namespace Lesson_2_4
     {
         string SetText { set; }
         string GetStreamProcessing();
+
+        void ClearBuffer();
         bool CanReturnStream { get; }
     }
 
     public interface VisualDisplay
     {
         void PrinteInfo(string message);
+        void ClearDisplay();
     }
 
 
@@ -63,7 +66,7 @@ namespace Lesson_2_4
 
     public class LineStreamProcessing : StreamProcessing
     {
-        private const int MAX_CHAR_ON_LINE = 150;
+        private const int MAX_CHAR_ON_LINE = 50;
         private string _allText =string.Empty;        
 
         public string SetText
@@ -83,23 +86,25 @@ namespace Lesson_2_4
         {
             string resultMessage = string.Empty;
             int lastChar = 0;
+            int lenght = _allText.Length;
 
-            for(int i = 0; i < MAX_CHAR_ON_LINE; i++)
+            for (int i = 0; i < MAX_CHAR_ON_LINE; i++)
             {
-                if (_allText.Length > i)
+                if (_allText.Length >= i)
                 {
                     resultMessage += _allText[i];
-                }
-                else
-                {
                     lastChar = i;
-                    break;
                 }
             }
-
-            _allText = _allText.Substring(lastChar);
-
+            
+            string str = _allText.Substring(lastChar, _allText.Length - 1 - lastChar);
+            _allText = str;
             return resultMessage;
+        }
+
+        public void ClearBuffer()
+        {
+            _allText = "";
         }
 
         public bool CanReturnStream { get => _allText.Length >= MAX_CHAR_ON_LINE; }
@@ -108,6 +113,11 @@ namespace Lesson_2_4
 
     public class ConsoleDisplay : VisualDisplay
     {
+        public void ClearDisplay()
+        {
+            Console.Clear();
+        }
+
         public void PrinteInfo(string message)
         {
             Console.WriteLine(message);
@@ -125,7 +135,16 @@ namespace Lesson_2_4
             _receivingInformation = receivingInformation;
             _streamProcessing = streamProcessing;
             _visualDisplay = visualDisplay;
-        } 
+        }
+        
+        public void UpdateReceivingInformation(ReceivingInformation receivingInformation)
+        {
+            _receivingInformation = receivingInformation;
+            _streamProcessing.ClearBuffer();
+            _visualDisplay.ClearDisplay();
+
+            Thread.Sleep(2000);
+        }
 
         public void Update()
         {
@@ -145,16 +164,24 @@ namespace Lesson_2_4
     {
         public static void Main (string[] args)
         {
-            FolderTXTReceivingInformation _tXTReceiving = new FolderTXTReceivingInformation(@"C:\Users\ba3a2\Desktop\test\", "*.txt");
+            FolderTXTReceivingInformation _tXTReceiving = new FolderTXTReceivingInformation(@"C:\Users\Andru\Desktop\Tests", "*.txt");
             LineStreamProcessing lineStreamProcessing = new LineStreamProcessing();
             ConsoleDisplay consoleDisplay = new ConsoleDisplay();
 
             TextWriter textWriter = new TextWriter(_tXTReceiving, lineStreamProcessing, consoleDisplay);
+            for(int i = 0; i< 5; i++)
+            {
+                textWriter.Update();
+            }
 
-            textWriter.Update();
-            textWriter.Update();
-            textWriter.Update();
-            textWriter.Update();
+            FolderTXTReceivingInformation _tXTReceiving_clone = new FolderTXTReceivingInformation(@"C:\Users\Andru\Desktop\Tests", "*.txt");
+
+            textWriter.UpdateReceivingInformation(_tXTReceiving_clone);
+
+            for (int i = 0; i < 5; i++)
+            {
+                textWriter.Update();
+            }
 
 
         }
